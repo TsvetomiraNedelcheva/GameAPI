@@ -1,7 +1,6 @@
 ﻿using Data;
 using Mapping;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace GameAPI.Controllers
 {
@@ -32,15 +31,18 @@ namespace GameAPI.Controllers
 
         }
 
-        [HttpGet]
-        public IActionResult GetGames() 
+        [HttpGet, Route("GetGames")]
+        public async Task<IActionResult> GetGames() //return response model like request model so that the response lists look better in postman
         {
-            List<string> games = new List<string>() { "SomeGame", "GameName", "Test" };
+            var games = data.Games.ToList();
+            return Ok(games);
+        }
 
-            if (games.Where(x => x.Equals("Super Mario")).Any() == false)
-                return NotFound();
-
-            return Accepted(games);
+        [HttpGet, Route("GetGame")]
+        public async Task<IActionResult> GetGame([FromBody] GetGameRequest request) //return response model like request model so that the response looks better in postman
+        {
+            Game game = data.Games.First(x => x.Id == request.GameId);
+            return Ok(game);
         }
 
         [HttpPost, Route("SetPrice")]
@@ -60,6 +62,10 @@ namespace GameAPI.Controllers
         }
     }
 
+    public class GetGameRequest
+    {
+        public int GameId { get; set; }
+    }
     public class AddGameRequest
     {
         public string Name { get; set; }
