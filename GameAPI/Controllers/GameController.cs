@@ -35,14 +35,42 @@ namespace GameAPI.Controllers
         public async Task<IActionResult> GetGames() //return response model like request model so that the response lists look better in postman
         {
             var games = data.Games.ToList();
-            return Ok(games);
+
+            List<GetGameResponse> responses = new List<GetGameResponse>();
+
+            foreach (var game in games)
+            {
+                var gameResponse = new GetGameResponse();
+                responses.Add(gameResponse);
+
+                gameResponse.GameId = game.Id;
+                gameResponse.GameName = game.Name;
+                gameResponse.Price = game.Price;
+                gameResponse.PriceCurrency = game.PriceCurrency;
+                gameResponse.GenreId = game.GenreId;
+                gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
+                gameResponse.Tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+
+            }
+            return Ok(responses);
         }
 
         [HttpGet, Route("GetGame")]
         public async Task<IActionResult> GetGame([FromBody] GetGameRequest request) //return response model like request model so that the response looks better in postman
         {
             Game game = data.Games.First(x => x.Id == request.GameId);
-            return Ok(game);
+
+            var gameResponse = new GetGameResponse();
+
+            gameResponse.GameId = game.Id;
+            gameResponse.GameName = game.Name;
+            gameResponse.Price = game.Price;
+            gameResponse.PriceCurrency = game.PriceCurrency;
+            gameResponse.GenreId = game.GenreId;
+            gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
+            gameResponse.Tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+
+            return Ok(gameResponse);
         }
 
         [HttpPost, Route("SetPrice")]
@@ -60,6 +88,17 @@ namespace GameAPI.Controllers
             await data.SaveChangesAsync();
             return Ok();
         }
+    }
+
+    public class GetGameResponse
+    {
+        public int GameId { get; set; }
+        public string GameName { get; set; }
+        public decimal Price { get; set; }
+        public string PriceCurrency { get; set; }
+        public int GenreId { get; set; }
+        public string Genre { get; set; }
+        public List<Tag> Tags { get; set; }
     }
 
     public class GetGameRequest
