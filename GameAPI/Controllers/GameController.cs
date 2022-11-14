@@ -1,6 +1,9 @@
 ﻿using Data;
 using Mapping;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace GameAPI.Controllers
 {
@@ -8,14 +11,15 @@ namespace GameAPI.Controllers
     [ApiController]
     public class GameController : ControllerBase
     {
-        private ApplicationDbContext data;
-        public GameController(ApplicationDbContext _data)
+        private ApplicationDbContext _data;
+
+        public GameController(ApplicationDbContext data)
         {
-             data = _data;
+             this._data = data;
         }
 
         [HttpPost, Route("AddGame")]
-        public async Task<IActionResult> AddGame([FromBody] AddGameRequest request)
+        public async Task<IActionResult> AddGameAsync([FromBody] AddGameRequest request)
         {
             var newGame = new Game
             {
@@ -25,8 +29,9 @@ namespace GameAPI.Controllers
                 Tags = request.Tags
             };
 
-            await data.Games.AddAsync(newGame);
-            await data.SaveChangesAsync();
+            await _data.Games.AddAsync(newGame).ConfigureAwait(false);
+            await _data.SaveChangesAsync().ConfigureAwait(false);
+
             return Ok();
 
         }
@@ -34,9 +39,8 @@ namespace GameAPI.Controllers
         [HttpGet, Route("GetGames")]
         public async Task<IActionResult> GetAllGames() 
         {
-            var games = data.Games.ToList();
+            List<Game> games = _data.Games.ToList();
             
-
             List<GetGameResponse> responses = new List<GetGameResponse>();
 
             foreach (var game in games)
@@ -47,12 +51,12 @@ namespace GameAPI.Controllers
                 gameResponse.GameId = game.Id;
                 gameResponse.GameName = game.Name;
                 gameResponse.Price = game.Price;
-                gameResponse.PriceCurrency = game.PriceCurrency;
+                gameResponse.PriceCurrency = game.Currency;
                 gameResponse.GenreId = game.GenreId;
-                gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
+                gameResponse.Genre = _data.Genres.Where(g => g.Id == game.GenreId).First().Name;
                 gameResponse.Tags = new List<TagResponse>();
 
-                var tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+                var tags = _data.Tags.Where(t => t.Games.Contains(game)).ToList();
                 foreach (var tag in tags)
                 {
                     var tagResponse = new TagResponse();
@@ -68,23 +72,26 @@ namespace GameAPI.Controllers
         }
 
         [HttpGet, Route("GetGameById")]
-        public async Task<IActionResult> GetGameById([FromBody] GetGameRequest request) 
+        public async Task<IActionResult> GetGameById([FromQuery] GetGameRequest request) 
         {
-            Game game = data.Games.First(x => x.Id == request.GameId);
+            var game = await (from theGame in _data.Games.Include(x=>x.Genre).Include(x=>x.Tags)
+                             where theGame.Id == 2
+                             select theGame)
+                            .SingleOrDefaultAsync().ConfigureAwait(false);
+
+            if (game is null)
+                return Ok();
 
             var gameResponse = new GetGameResponse();
-           
-
             gameResponse.GameId = game.Id;
             gameResponse.GameName = game.Name;
             gameResponse.Price = game.Price;
-            gameResponse.PriceCurrency = game.PriceCurrency;
+            gameResponse.PriceCurrency = game.Currency;
             gameResponse.GenreId = game.GenreId;
-            gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
+            gameResponse.Genre = game.Genre.Name;
             gameResponse.Tags = new List<TagResponse>();
 
-            var tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
-            foreach (var tag in tags)
+            foreach (Tag tag in game.Tags)
             {
                 var tagResponse = new TagResponse();
 
@@ -94,23 +101,33 @@ namespace GameAPI.Controllers
                 gameResponse.Tags.Add(tagResponse);
             }
 
-
             return Ok(gameResponse);
         }
 
         [HttpPost, Route("SetPrice")]
         public async Task<IActionResult> SetPriceAsync([FromBody] SetPriceRequest request)
         {
-            if (!data.Games.Any(x => x.Id == request.GameId))
+
+            IEnumerable<string> currencySymbols = CultureInfo.GetCultures(CultureTypes.SpecificCultures)
+                .Select(x => (new RegionInfo(x.LCID)).ISOCurrencySymbol)
+                .Distinct()
+                .OrderBy(x => x);
+
+            if (!currencySymbols.Any(x => x == request.Price.Currency))
             {
                 return BadRequest();
             }
 
-            Game game = data.Games.First(x => x.Id == request.GameId);
+
+            Game game = _data.Games.Where(x => x.Id == request.GameId).SingleOrDefault();
+            if (game is null)
+                return BadRequest();
+
             game.Price = request.Price.Amount;
-            string priceCurrency = request.Price.Amount + request.Price.Currency;
-            game.PriceCurrency = priceCurrency;
-            await data.SaveChangesAsync();
+            game.Currency = request.Price.Currency;
+
+            await _data.SaveChangesAsync().ConfigureAwait(false);
+
             return Ok();
         }
     }
@@ -122,12 +139,23 @@ namespace GameAPI.Controllers
     }
     public class GetGameResponse
     {
+        public GetGameResponse()
+        {
+            Tags = new List<TagResponse>();
+        }
+
         public int GameId { get; set; }
+
         public string GameName { get; set; }
+
         public decimal Price { get; set; }
+
         public string PriceCurrency { get; set; }
+
         public int GenreId { get; set; }
+
         public string Genre { get; set; }
+
         public List<TagResponse> Tags { get; set; }
     }
 
@@ -137,22 +165,35 @@ namespace GameAPI.Controllers
     }
     public class AddGameRequest
     {
+        public AddGameRequest()
+        {
+            Tags = new List<Tag>();
+        }
+
         public string Name { get; set; }
+
         public decimal Price { get; set; }
+
         public int GenreId { get; set; }
+
         public List<Tag> Tags { get; set; }
     }
 
     public class SetPriceRequest
     {
-        public int GameId { get; set; }
+        [Required]
+        public int? GameId { get; set; }
 
+    
         public GamePrice Price { get; set; }
     }
 
     public class GamePrice
     {
+        [Required]
         public decimal Amount { get; set; }
+
+        [Required]
         public string Currency { get; set; }
     }
 }

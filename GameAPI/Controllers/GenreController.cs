@@ -8,10 +8,10 @@ namespace GameAPI.Controllers
     [ApiController]
     public class GenreController : Controller
     {
-        private ApplicationDbContext data;
-        public GenreController(ApplicationDbContext _data)
+        private ApplicationDbContext _data;
+        public GenreController(ApplicationDbContext data)
         {
-            data = _data;
+            this._data = data;
         }
 
         [HttpPost, Route("AddGenre")]
@@ -22,8 +22,9 @@ namespace GameAPI.Controllers
                 Name = request.Name,
             };
 
-            await data.Genres.AddAsync(newGenre);
-            await data.SaveChangesAsync();
+            await _data.Genres.AddAsync(newGenre);
+            await _data.SaveChangesAsync();
+
             return Ok();
         }
     }

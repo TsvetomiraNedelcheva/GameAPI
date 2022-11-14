@@ -7,13 +7,14 @@
             Tags = new List<Tag>();
         }
 
+        
         public int Id { get; set; }
 
         public string Name { get; set; }
 
         public decimal Price { get; set; }
 
-        public string PriceCurrency { get; set; }
+        public string Currency { get; set; }
 
         public int GenreId { get; set; }
 
@@ -21,6 +22,6 @@
 
         public List<Tag> Tags { get; set; }
 
-        // can have one genre can have many tags tags can have many games //seedvame s json 
+        // can have one genre can have many tags tags can have many games 
     }
 }
