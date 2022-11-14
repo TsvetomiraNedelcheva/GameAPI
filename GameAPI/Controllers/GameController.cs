@@ -32,9 +32,10 @@ namespace GameAPI.Controllers
         }
 
         [HttpGet, Route("GetGames")]
-        public async Task<IActionResult> GetGames() //return response model like request model so that the response lists look better in postman
+        public async Task<IActionResult> GetAllGames() 
         {
             var games = data.Games.ToList();
+            
 
             List<GetGameResponse> responses = new List<GetGameResponse>();
 
@@ -49,18 +50,30 @@ namespace GameAPI.Controllers
                 gameResponse.PriceCurrency = game.PriceCurrency;
                 gameResponse.GenreId = game.GenreId;
                 gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
-                gameResponse.Tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+                gameResponse.Tags = new List<TagResponse>();
+
+                var tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+                foreach (var tag in tags)
+                {
+                    var tagResponse = new TagResponse();
+
+                    tagResponse.Id = tag.Id;
+                    tagResponse.Name = tag.Name;
+
+                    gameResponse.Tags.Add(tagResponse);
+                }
 
             }
             return Ok(responses);
         }
 
-        [HttpGet, Route("GetGame")]
-        public async Task<IActionResult> GetGame([FromBody] GetGameRequest request) //return response model like request model so that the response looks better in postman
+        [HttpGet, Route("GetGameById")]
+        public async Task<IActionResult> GetGameById([FromBody] GetGameRequest request) 
         {
             Game game = data.Games.First(x => x.Id == request.GameId);
 
             var gameResponse = new GetGameResponse();
+           
 
             gameResponse.GameId = game.Id;
             gameResponse.GameName = game.Name;
@@ -68,7 +81,19 @@ namespace GameAPI.Controllers
             gameResponse.PriceCurrency = game.PriceCurrency;
             gameResponse.GenreId = game.GenreId;
             gameResponse.Genre = data.Genres.Where(g => g.Id == game.GenreId).First().Name;
-            gameResponse.Tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+            gameResponse.Tags = new List<TagResponse>();
+
+            var tags = data.Tags.Where(t => t.Games.Contains(game)).ToList();
+            foreach (var tag in tags)
+            {
+                var tagResponse = new TagResponse();
+
+                tagResponse.Id = tag.Id;
+                tagResponse.Name = tag.Name;
+
+                gameResponse.Tags.Add(tagResponse);
+            }
+
 
             return Ok(gameResponse);
         }
@@ -90,6 +115,11 @@ namespace GameAPI.Controllers
         }
     }
 
+    public class TagResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
     public class GetGameResponse
     {
         public int GameId { get; set; }
@@ -98,7 +128,7 @@ namespace GameAPI.Controllers
         public string PriceCurrency { get; set; }
         public int GenreId { get; set; }
         public string Genre { get; set; }
-        public List<Tag> Tags { get; set; }
+        public List<TagResponse> Tags { get; set; }
     }
 
     public class GetGameRequest
