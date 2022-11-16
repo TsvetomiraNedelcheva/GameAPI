@@ -120,11 +120,13 @@ namespace GameAPI.Controllers
 
 
             Game game = _data.Games.Where(x => x.Id == request.GameId).SingleOrDefault();
+
             if (game is null)
                 return BadRequest();
 
-            game.Price = request.Price.Amount;
-            game.Currency = request.Price.Currency;
+            game.SetPrice(game, request.Price.Amount, request.Price.Currency);
+            //game.Price = request.Price.Amount;
+            //game.Currency = request.Price.Currency;
 
             await _data.SaveChangesAsync().ConfigureAwait(false);
 

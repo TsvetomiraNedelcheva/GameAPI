@@ -22,6 +22,14 @@
 
         public List<Tag> Tags { get; set; }
 
+        public void SetPrice(Game game, decimal price, string currency)
+        {
+            game.Price = price;
+            game.Currency = currency;
+        }
+
+        //method add tag?
+
         // can have one genre can have many tags tags can have many games 
     }
 }
