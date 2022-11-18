@@ -2,19 +2,25 @@
 {
     public class Game
     {
-        public Game()
+        Game()
         {
             Tags = new List<Tag>();
         }
 
-        
+        public Game(string name, Money price, int genreId, List<Tag> tags) : base()
+        {
+            Name = name;
+            Price = price;
+            GenreId = genreId;
+            Tags = tags;
+        }
+
+
         public int Id { get; set; }
 
         public string Name { get; set; }
 
-        public decimal Price { get; set; }
-
-        public string Currency { get; set; }
+        public Money Price { get; set; }
 
         public int GenreId { get; set; }
 
@@ -22,10 +28,10 @@
 
         public List<Tag> Tags { get; set; }
 
-        public void SetPrice(Game game, decimal price, string currency)
+        public void SetPrice(Game game, Money price)
         {
-            game.Price = price;
-            game.Currency = currency;
+            game.Price.Amount = price.Amount;
+            game.Price.Currency = price.Currency;
         }
 
         //method add tag?

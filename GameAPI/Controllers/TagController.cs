@@ -1,4 +1,5 @@
 ﻿using Data;
+using GameAPI.Services;
 using Mapping;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,22 +9,16 @@ namespace GameAPI.Controllers
     [ApiController]
     public class TagController : Controller
     {
-        private ApplicationDbContext data;
-        public TagController(ApplicationDbContext _data)
+        private TagService service;
+        public TagController(TagService _service)
         {
-            data = _data;
+            service = _service;
         }
 
         [HttpPost, Route("AddTag")]
         public async Task<IActionResult> AddTag([FromBody] AddTagRequest request)
         {
-            var newTag = new Tag
-            {
-                Name = request.Name
-            };
-
-            await data.Tags.AddAsync(newTag);
-            await data.SaveChangesAsync();
+            service.AddTag(request.Name);
             return Ok();
         
         }

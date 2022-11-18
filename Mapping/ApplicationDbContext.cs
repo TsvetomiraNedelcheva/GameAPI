@@ -18,7 +18,6 @@ namespace Mapping
         {
             builder.Entity<Game>().HasKey(x => x.Id);
             builder.Entity<Game>().Property(x => x.Name).IsRequired();
-            builder.Entity<Game>().Property(x => x.Currency).IsRequired();
             builder.Entity<Game>().HasMany(x => x.Tags).WithMany(x => x.Games);
             builder.Entity<Game>().HasOne<Genre>().WithMany(x => x.Games);
 
@@ -29,6 +28,9 @@ namespace Mapping
             builder.Entity<Tag>().HasKey(x => x.Id);
             builder.Entity<Tag>().Property(x => x.Name).IsRequired();
             builder.Entity<Tag>().HasMany(x => x.Games).WithMany(x => x.Tags);
+
+            builder.Ignore<Money>();
+            builder.Ignore<CurrencyCode>();
 
 
             var entityTypes = builder.Model.GetEntityTypes().ToList();

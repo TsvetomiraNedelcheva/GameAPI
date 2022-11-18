@@ -1,4 +1,5 @@
 ﻿using Data;
+using GameAPI.Services;
 using Mapping;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,22 +9,17 @@ namespace GameAPI.Controllers
     [ApiController]
     public class GenreController : Controller
     {
-        private ApplicationDbContext _data;
-        public GenreController(ApplicationDbContext data)
+       
+        private GenreService service;
+        public GenreController( GenreService _service)
         {
-            this._data = data;
+            this.service = _service;
         }
 
         [HttpPost, Route("AddGenre")]
         public async Task<IActionResult> AddGenre([FromBody] AddGenreRequest request)
         {
-            var newGenre = new Genre
-            {
-                Name = request.Name,
-            };
-
-            await _data.Genres.AddAsync(newGenre);
-            await _data.SaveChangesAsync();
+            service.AddGenre(request.Name);
 
             return Ok();
         }
