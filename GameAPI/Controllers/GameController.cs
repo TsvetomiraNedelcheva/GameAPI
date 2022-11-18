@@ -79,8 +79,6 @@ namespace GameAPI.Controllers
     {
         [Required]
         public int? GameId { get; set; }
-
-    
         public Money Price { get; set; }
     }
 

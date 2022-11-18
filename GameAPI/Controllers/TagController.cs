@@ -18,7 +18,7 @@ namespace GameAPI.Controllers
         [HttpPost, Route("AddTag")]
         public async Task<IActionResult> AddTag([FromBody] AddTagRequest request)
         {
-            service.AddTag(request.Name);
+            await service.AddTag(request.Name);
             return Ok();
         
         }

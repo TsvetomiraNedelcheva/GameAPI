@@ -19,7 +19,7 @@ namespace GameAPI.Controllers
         [HttpPost, Route("AddGenre")]
         public async Task<IActionResult> AddGenre([FromBody] AddGenreRequest request)
         {
-            service.AddGenre(request.Name);
+            await service.AddGenre(request.Name);
 
             return Ok();
         }
